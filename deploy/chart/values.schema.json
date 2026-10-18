@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image", "commit", "replicas", "resources", "seedDeadlineSeconds"],
+  "properties": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api", "seeder", "tag", "pullPolicy"],
+      "properties": {
+        "api": { "const": "etenv/api" },
+        "seeder": { "const": "etenv/seeder" },
+        "tag": { "type": "string", "pattern": "^(pr-[0-9]{1,7}-[0-9a-f]{7}|dev)$" },
+        "pullPolicy": { "const": "Never" }
+      }
+    },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+    "replicas": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api", "seeder"],
+      "properties": {
+        "api": { "$ref": "#/definitions/resources" },
+        "seeder": { "$ref": "#/definitions/resources" }
+      }
+    },
+    "seedDeadlineSeconds": { "type": "integer", "minimum": 30, "maximum": 900 }
+  },
+  "definitions": {
+    "quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memory"],
+      "properties": {
+        "cpu": { "type": "string", "pattern": "^[0-9]+m?$" },
+        "memory": { "type": "string", "pattern": "^[0-9]+(Mi|Gi)$" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": { "$ref": "#/definitions/quantity" },
+        "limits": { "$ref": "#/definitions/quantity" }
+      }
+    }
+  }
+}

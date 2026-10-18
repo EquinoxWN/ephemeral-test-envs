@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-seed
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seed
+data:
+  # Anonymized by `etenv anonymize`; the API refuses data that is not in the anonymized shape.
+  seed.json: |
+    {{- .Files.Get "files/seed.json" | nindent 4 }}

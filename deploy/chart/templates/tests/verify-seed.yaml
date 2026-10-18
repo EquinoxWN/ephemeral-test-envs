@@ -1,0 +1,14 @@
+# `helm test`: the API must hold exactly the seed (counts, checksum and one customer read back).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-verify-seed
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seeder
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  activeDeadlineSeconds: {{ .Values.seedDeadlineSeconds }}
+  {{- include "app.seederPod" (list . "verify") | nindent 2 }}

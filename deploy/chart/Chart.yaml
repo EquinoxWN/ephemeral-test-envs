@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ephemeral-app
+description: Sample orders service with anonymized seed data, installed once per pull request into a kind cluster.
+type: application
+version: 0.1.0
+appVersion: "m1"

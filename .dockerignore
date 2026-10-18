@@ -1,0 +1,10 @@
+.git
+.github
+.tmp
+.gocache
+.gomodcache
+docs
+testdata
+deploy
+scripts
+*.md

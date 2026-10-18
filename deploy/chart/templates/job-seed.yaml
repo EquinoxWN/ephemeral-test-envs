@@ -1,0 +1,22 @@
+# Loads the anonymized seed after install; Helm waits for it and fails the install if it fails.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-seed
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seeder
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: {{ .Values.seedDeadlineSeconds }}
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        {{- include "app.labels" . | nindent 8 }}
+        app.kubernetes.io/component: seeder
+    spec:
+      {{- include "app.seederPod" (list . "load") | nindent 6 }}

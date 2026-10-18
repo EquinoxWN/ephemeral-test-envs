@@ -1,0 +1,22 @@
+# Images are built from the pull request and loaded into kind, so they are never pulled.
+image:
+  api: etenv/api
+  seeder: etenv/seeder
+  tag: dev
+  pullPolicy: Never
+
+# Commit the images were built from (shown in pod annotations).
+commit: "0000000"
+
+replicas: 1
+
+resources:
+  api:
+    requests: { cpu: 50m, memory: 32Mi }
+    limits: { cpu: 250m, memory: 64Mi }
+  seeder:
+    requests: { cpu: 20m, memory: 16Mi }
+    limits: { cpu: 200m, memory: 64Mi }
+
+# Seconds the seed Job and the verify test may run before they fail.
+seedDeadlineSeconds: 180

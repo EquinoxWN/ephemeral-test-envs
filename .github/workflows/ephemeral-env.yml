@@ -1,0 +1,43 @@
+name: ephemeral-env
+
+# Every pull request gets its own kind cluster on the runner: the PR's images are built and
+# loaded, the chart is installed with anonymized seed data, helm test checks the data, and the
+# cluster is deleted. Pushes to main run the same check (the run number stands in for the PR number).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  env:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.26.9"
+          cache-dependency-path: go.sum
+      - name: kind, helm and kubectl (pinned, SHA-256 checked)
+        run: |
+          make tools
+          echo "$PWD/.tmp/bin" >> "$GITHUB_PATH"
+      - name: Create, seed, test and delete the environment (prints a notice with timings)
+        env:
+          PR: ${{ github.event.pull_request.number || github.run_number }}
+          COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: make env PR="$PR" COMMIT="$COMMIT"
+      - name: Report
+        if: always()
+        run: cat .tmp/env-report.json || true
