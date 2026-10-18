@@ -24,7 +24,8 @@ vulnerabilities:
 ![gofmt, go vet, helm lint, go test, scan, policy and govulncheck output](docs/proof/tests.jpg)
 
 The kind run itself (cluster, images, chart, `helm test`, teardown) runs in the `ephemeral-env`
-workflow on GitHub; it was not run on the development machine (see
+workflow on GitHub. Its first run (2026-10-18) passed: environment up in 79 s, 80 s in total,
+cluster torn down. It was not run on the development machine (see
 [Tests and results](#tests-and-results)).
 
 ## Architecture
@@ -155,7 +156,7 @@ Latest local run (full detail in [docs/results/m1.md](docs/results/m1.md)):
 | Chart policy | 6 objects, 3 containers, 0 violations; schema refuses `image.tag=latest` and `pullPolicy=Always` |
 | Seed | 250 -> 247 customers, 600 -> 597 orders, smallest group 5 (k=5), leak scan clean |
 | Audit | govulncheck v1.8.0: no vulnerabilities |
-| kind run (create, build, load, install, `helm test`, delete) | CI only: the `ephemeral-env` workflow prints a `::notice` with up and total seconds; no GitHub run yet, so no timings are claimed here |
+| kind run (create, build, load, install, `helm test`, delete) | CI, passed on 2026-10-18: `etenv-pr-1` up in 79 s, total 80 s, torn down (not run locally) |
 
 The full local check passed twice.
 
