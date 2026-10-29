@@ -92,7 +92,7 @@ canonical data, and one customer read back field by field.
 |---|---|---|
 | Cluster | kind v0.33.0, node `kindest/node:v1.37.0` pinned by digest, one control-plane node, API server on loopback | Image and Helm caching (M3) |
 | Deploy | Helm v4.3.0 chart with `values.schema.json`, post-install seed Job, `helm test` pod, NetworkPolicy | |
-| Images | Multi-stage Dockerfile, `golang:1.26.9-alpine` and `distroless/static:nonroot` by digest, static stripped binaries | |
+| Images | Multi-stage Dockerfile, `golang:1.26.10-alpine` and `distroless/static:nonroot` by digest, static stripped binaries | |
 | Seed data | Go anonymizer: HMAC-SHA256 pseudonyms, generalization, k-group suppression, leak scan | |
 | Orchestration | `etenv` CLI (Go 1.26): argv plan, no shell, own kubeconfig, report JSON, GitHub annotations | Playwright tests, PR comment and artifacts (M2) |
 | Quality | gofmt, go vet, helm lint, chart policy, Go tests with the race detector in CI, govulncheck | |
@@ -151,7 +151,7 @@ Latest local run (full detail in [docs/results/m1.md](docs/results/m1.md)):
 
 | Check | Result |
 |---|---|
-| Tests | 39 passed, 0 failed (Go 1.26.9; CI adds the race detector) |
+| Tests | 39 passed, 0 failed (Go 1.26.10; CI adds the race detector) |
 | Lint | gofmt and go vet clean; `helm lint --strict` 0 failed |
 | Chart policy | 6 objects, 3 containers, 0 violations; schema refuses `image.tag=latest` and `pullPolicy=Always` |
 | Seed | 250 -> 247 customers, 600 -> 597 orders, smallest group 5 (k=5), leak scan clean |

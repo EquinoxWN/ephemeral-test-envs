@@ -43,7 +43,7 @@ chart-check: build
 	$(HELM) template app deploy/chart --namespace pr-1 --set image.tag=pr-1-0000000 --set commit=0000000 > .tmp/rendered.yaml
 	$(ETENV) policy -in .tmp/rendered.yaml
 
-# Known vulnerabilities in the code paths actually called (Go 1.26.9, as in CI).
+# Known vulnerabilities in the code paths actually called (Go 1.26.10, as in CI).
 audit:
 	go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
 
