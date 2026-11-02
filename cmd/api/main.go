@@ -37,7 +37,9 @@ func main() {
 		<-ctx.Done()
 		shut, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		_ = srv.Shutdown(shut)
+		if err := srv.Shutdown(shut); err != nil {
+			log.Error("shutdown did not drain in time", "err", err)
+		}
 	}()
 	log.Info("listening", "addr", *addr, "commit", commit)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

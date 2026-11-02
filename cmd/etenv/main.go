@@ -30,6 +30,13 @@ const usage = `usage: etenv <command> [flags]
   up         create the environment, check it, tear it down, write a report
   down       delete a pull request's cluster`
 
+// Every step of "up" shares upDeadline, so a hung docker build cannot outlive the CI job (25 min)
+// and skip teardown; teardown has its own 5 minute budget, and so does "down".
+const (
+	upDeadline   = 15 * time.Minute
+	downDeadline = 5 * time.Minute
+)
+
 // main dispatches to a subcommand; exit 1 means a check failed, 2 a usage error.
 func main() {
 	if len(os.Args) < 2 {
@@ -231,6 +238,8 @@ func cmdUp(args []string) error {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	ctx, cancel := context.WithTimeout(ctx, upDeadline)
+	defer cancel()
 	r := envplan.Run(ctx, p, envplan.ExecRunner{}, os.Stdout, time.Now)
 	if *report != "" {
 		if err := writeJSON(*report, r); err != nil {
@@ -257,8 +266,10 @@ func cmdDown(args []string) error {
 	if err != nil {
 		return err
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), downDeadline)
+	defer cancel()
 	for _, s := range p.Teardown {
-		if err := (envplan.ExecRunner{}).Run(context.Background(), s, p.Env, os.Stdout); err != nil {
+		if err := (envplan.ExecRunner{}).Run(ctx, s, p.Env, os.Stdout); err != nil {
 			return err
 		}
 	}
