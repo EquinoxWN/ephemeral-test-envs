@@ -30,7 +30,7 @@ declare -A SUM=(
 # fetch downloads a URL over HTTPS and refuses it unless the SHA-256 matches.
 fetch() {
   local url=$1 out=$2 want=$3
-  curl --proto '=https' --tlsv1.2 -fsSL --retry 3 -o "$out" "$url"
+  curl --proto '=https' --tlsv1.2 -fsSL --retry 3 --connect-timeout 20 --max-time 300 -o "$out" "$url"
   local got
   got=$(sha256sum "$out" | cut -d' ' -f1)
   [ "$got" = "$want" ] || { echo "checksum mismatch for $url: got $got, want $want" >&2; rm -f "$out"; exit 1; }
