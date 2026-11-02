@@ -53,6 +53,7 @@ func TestSeedValidateRefusesPersonalOrBrokenData(t *testing.T) {
 		"empty display name": func(s *Seed) { s.Customers[0].DisplayName = "" },
 		"orphan order":       func(s *Seed) { s.Orders[0].CustomerID = "c-00000000000000cc" },
 		"negative amount":    func(s *Seed) { s.Orders[0].AmountCents = -1 },
+		"huge amount":        func(s *Seed) { s.Orders[0].AmountCents = 100_000_001 },
 		"bad currency":       func(s *Seed) { s.Orders[0].Currency = "euro" },
 		"bad date":           func(s *Seed) { s.Orders[0].PlacedOn = "02/01/2026" },
 		"unknown status":     func(s *Seed) { s.Orders[0].Status = "lost" },

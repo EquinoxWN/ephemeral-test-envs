@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -114,5 +115,33 @@ func TestNewClientRefusesBadURLs(t *testing.T) {
 		if _, err := NewClient(u); err == nil {
 			t.Errorf("%q accepted", u)
 		}
+	}
+}
+
+// TestVerifyComparesTheCustomerReadBack catches an app whose counts and checksum match but whose reads differ.
+func TestVerifyComparesTheCustomerReadBack(t *testing.T) {
+	app := api.New(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, "/api/customers/") {
+			app.ServeHTTP(w, r)
+			return
+		}
+		rec := httptest.NewRecorder()
+		app.ServeHTTP(rec, r)
+		var v api.CustomerView
+		if err := json.Unmarshal(rec.Body.Bytes(), &v); err != nil {
+			t.Error(err)
+		}
+		v.DisplayName += "x"
+		_ = json.NewEncoder(w).Encode(v)
+	}))
+	defer srv.Close()
+	seed := chartSeed(t)
+	c := fastClient(t, srv.URL)
+	if _, err := c.Load(context.Background(), seed); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Verify(context.Background(), seed); err == nil {
+		t.Fatal("verify accepted a customer that reads back differently")
 	}
 }

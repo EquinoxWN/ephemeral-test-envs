@@ -54,6 +54,9 @@ func TestLoadThenReadBack(t *testing.T) {
 
 func TestRefusesRawOrInvalidData(t *testing.T) {
 	s := newServer()
+	if code, body := call(t, s, http.MethodPut, "/api/dataset", seedJSON); code != http.StatusOK {
+		t.Fatalf("initial load: %d %s", code, body)
+	}
 	raw := `{"customers":[{"id":"cust-1","full_name":"Amara Abara","email":"a@mail.test"}],"orders":[]}`
 	if code, body := call(t, s, http.MethodPut, "/api/dataset", raw); code != http.StatusBadRequest {
 		t.Errorf("raw-shaped data: %d %s", code, body)
@@ -68,7 +71,7 @@ func TestRefusesRawOrInvalidData(t *testing.T) {
 	}
 	// A refused load leaves the previous data in place.
 	_, body := call(t, s, http.MethodGet, "/api/stats", "")
-	if !strings.Contains(body, `"customers":0`) {
+	if !strings.Contains(body, `"customers":1`) || !strings.Contains(body, `"orders":2`) {
 		t.Errorf("stats changed after refused loads: %s", body)
 	}
 }
@@ -109,5 +112,15 @@ func TestConcurrentReadsDuringReloads(t *testing.T) {
 	wg.Wait()
 	if _, body := call(t, s, http.MethodGet, "/api/stats", ""); !strings.Contains(body, `"orders":2`) {
 		t.Fatalf("final stats %s", body)
+	}
+}
+
+// TestReloadIsIdempotent shows a retried PUT replaces the data instead of adding to it.
+func TestReloadIsIdempotent(t *testing.T) {
+	s := newServer()
+	_, first := call(t, s, http.MethodPut, "/api/dataset", seedJSON)
+	code, second := call(t, s, http.MethodPut, "/api/dataset", seedJSON)
+	if code != http.StatusOK || first != second || !strings.Contains(second, `"orders":2`) {
+		t.Fatalf("second load %d %s, first %s", code, second, first)
 	}
 }

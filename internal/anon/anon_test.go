@@ -138,6 +138,7 @@ func TestScanCatchesInjectedLeaks(t *testing.T) {
 		"other phone":               func(x *dataset.Seed) { x.Customers[0].DisplayName = "call +49 30 1234567" },
 		"card number":               func(x *dataset.Seed) { x.Customers[0].DisplayName = "4111111111111111" },
 		"raw order id":              func(x *dataset.Seed) { x.Orders[0].ID = raw.Orders[0].ID },
+		"full name inside text":     func(x *dataset.Seed) { x.Customers[0].DisplayName = "VIP " + c.FullName + " (gold)" },
 	}
 	for name, mutate := range cases {
 		x := dataset.Seed{Customers: append([]dataset.Customer{}, s.Customers...), Orders: append([]dataset.Order{}, s.Orders...)}
