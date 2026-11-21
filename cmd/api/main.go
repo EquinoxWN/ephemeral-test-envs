@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,33 +18,45 @@ import (
 
 var commit = "unknown"
 
-// main serves until SIGTERM, then drains in-flight requests.
+const drainTimeout = 10 * time.Second
+
 func main() {
 	addr := flag.String("addr", ":8080", "listen address")
 	flag.Parse()
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	ln, err := net.Listen("tcp", *addr)
+	if err != nil {
+		log.Error("listen failed", "err", err)
+		os.Exit(1)
+	}
+	log.Info("listening", "addr", ln.Addr().String(), "commit", commit)
+	if err := serve(ctx, ln, api.New(log)); err != nil {
+		log.Error("server failed", "err", err)
+		os.Exit(1)
+	}
+}
+
+// serve runs until ctx ends, then returns only after in-flight requests drain.
+func serve(ctx context.Context, ln net.Listener, h http.Handler) error {
 	srv := &http.Server{
-		Addr:              *addr,
-		Handler:           api.New(log),
+		Handler:           h,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
 		MaxHeaderBytes:    16 << 10,
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	drained := make(chan error, 1)
 	go func() {
 		<-ctx.Done()
-		shut, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		shut, cancel := context.WithTimeout(context.Background(), drainTimeout)
 		defer cancel()
-		if err := srv.Shutdown(shut); err != nil {
-			log.Error("shutdown did not drain in time", "err", err)
-		}
+		drained <- srv.Shutdown(shut)
 	}()
-	log.Info("listening", "addr", *addr, "commit", commit)
-	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Error("server failed", "err", err)
-		os.Exit(1)
+	if err := srv.Serve(ln); !errors.Is(err, http.ErrServerClosed) {
+		return err
 	}
+	return <-drained
 }
