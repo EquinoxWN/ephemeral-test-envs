@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -152,7 +153,7 @@ func cmdScan(args []string) error {
 		return err
 	}
 	var seed dataset.Seed
-	if err := readJSON(*seedPath, &seed); err != nil {
+	if err := dataset.DecodeStrict(bytes.NewReader(data), &seed); err != nil {
 		return fmt.Errorf("seed: %w", err)
 	}
 	if err := seed.Validate(); err != nil {
