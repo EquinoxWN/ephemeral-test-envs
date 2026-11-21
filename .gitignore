@@ -19,3 +19,9 @@ CLAUDE.md
 .gocache/
 .gomodcache/
 .gopath/
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.tfstate
