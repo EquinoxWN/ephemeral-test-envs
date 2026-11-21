@@ -148,10 +148,11 @@ Latest local run (full detail in [docs/results/m1.md](docs/results/m1.md)):
 | `internal/seeder/seeder_test.go` | 5 | The chart's seed loaded into the real API handler and verified end to end; a one-cent difference fails; a customer that reads back differently fails; 5xx retried, 4xx not; bounded attempts; bad URLs refused |
 | `internal/envplan/envplan_test.go` | 9 | 10 unsafe configs refused; step order; own kubeconfig on every helm and kubectl call; teardown after success, failure and cancellation; failed teardown reported; real child process run |
 | `internal/chartpolicy/chartpolicy_test.go` | 5 | Good manifests pass; 16 mutations each caught by their rule; digest-pinned images allowed; Jobs and Pods checked; broken YAML refused |
+| `cmd/api/main_test.go` | 1 | On SIGTERM the server returns only after in-flight requests finish |
 
 | Check | Result |
 |---|---|
-| Tests | 41 passed, 0 failed (Go 1.26.11; CI adds the race detector) |
+| Tests | 42 passed, 0 failed (Go 1.26.11; CI adds the race detector) |
 | Lint | gofmt and go vet clean; `helm lint --strict` 0 failed |
 | Chart policy | 6 objects, 3 containers, 0 violations; schema refuses `image.tag=latest` and `pullPolicy=Always` |
 | Seed | 250 -> 247 customers, 600 -> 597 orders, smallest group 5 (k=5), leak scan clean |
